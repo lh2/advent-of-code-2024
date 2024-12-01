@@ -7,8 +7,9 @@
   (let ((right-counts (make-hash-table))
         left
         right)
-    (loop with input = (mapcar #'read-number-list (read-input input))
-          for row in input
+    (loop for line = (read-line input nil)
+          until (null line)
+          for row = (read-number-list line)
           for right-num = (cadr row)
           do (push (car row) left)
              (push right-num right)
