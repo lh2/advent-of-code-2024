@@ -1,6 +1,6 @@
 #!/bin/sh
 #|
-exec sbcl --script "build.lisp"
+exec sbcl --dynamic-space-size 4096 --script "build.lisp"
 |#
 (let ((quicklisp-init (merge-pathnames "quicklisp/setup.lisp"
                                        (user-homedir-pathname))))
@@ -19,4 +19,5 @@ exec sbcl --script "build.lisp"
         do (ql:quickload system-name))
 (sb-ext:save-lisp-and-die "aoc"
                           :toplevel #'aoc:main
-                          :executable t)
+                          :executable t
+                          :save-runtime-options t)
