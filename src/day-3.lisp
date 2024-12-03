@@ -1,5 +1,6 @@
 (defpackage #:aoc/day-3
   (:use #:cl #:aoc/utils)
+  (:import-from :cl-ppcre)
   (:export #:day-3))
 (in-package #:aoc/day-3)
 
