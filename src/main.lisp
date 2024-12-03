@@ -91,34 +91,34 @@
                                                                 :value *cookie*
                                                                 :domain ".adventofcode.com"))))
        input-pathname))
-    (values
-     (unless (probe-file source-pathname)
-       (with-open-file (stream source-pathname :direction :output)
-         (let ((fun (make-symbol (format nil "DAY-~A" day)))
-               (package (make-symbol (format nil "AOC/DAY-~A" day)))
-               (*print-case* :downcase))
+    (let ((package (make-symbol (format nil "AOC/DAY-~A" day)))
+          (test-package (make-symbol (format nil "AOC-TEST/DAY-~A" day)))
+          (fun (make-symbol (format nil "DAY-~A" day)))
+          (*print-case* :downcase))
+      (values
+       (unless (probe-file source-pathname)
+         (with-open-file (stream source-pathname :direction :output)
            (format stream "~S~%~S~%~%(defun ~A (input)~%  )"
                    `(defpackage ,package
                       (:use #:cl #:aoc/utils)
                       (:export
                        ,fun))
                    `(in-package ,package)
-                   fun)))
-       ;; return function, makes it easy to jump into the file from Emacs
-       (day-fun day))
-     (unless (probe-file test-pathname)
-       (let ((package (make-symbol (format nil "AOC-TEST/DAY-~A" day)))
-             (*print-case* :downcase))
+                   fun))
+         ;; return function, makes it easy to jump into the file from Emacs
+         (day-fun day))
+       (unless (probe-file test-pathname)
          (with-open-file (stream test-pathname :direction :output)
            (format stream "~S~%~S~%~%(define-test test-day-~A~%    ()~%  )"
-                   `(defpackage ,package
-                      (:use #:cl #:lisp-unit2))
-                   `(in-package ,package)
+                   `(defpackage ,test-package
+                      (:use #:cl #:lisp-unit2)
+                      (:import-from ,package))
+                   `(in-package ,test-package)
                    day))
          (asdf:load-system (format nil "aoc-test/day-~A" day))
          (symbol-function
           (find-symbol (format nil "TEST-DAY-~A" day)
-                       (find-package package))))))))
+                       (find-package test-package))))))))
 
 (defun main ()
   (let* ((args (uiop:command-line-arguments))

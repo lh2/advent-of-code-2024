@@ -1,6 +1,8 @@
 (defpackage #:aoc/day-2
   (:use #:cl #:aoc/utils)
-  (:export #:day-2))
+  (:export
+   #:report-safe-p
+   #:day-2))
 (in-package #:aoc/day-2)
 
 (defun report-safe-p (report &key direction allow-skip)

@@ -1,5 +1,6 @@
 (defpackage #:aoc-test/day-1
-  (:use #:cl #:lisp-unit2))
+  (:use #:cl #:lisp-unit2)
+  (:import-from aoc/day-1))
 (in-package #:aoc-test/day-1)
 
 (define-test test-day-1
