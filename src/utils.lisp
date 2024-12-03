@@ -24,7 +24,8 @@
    #:manhattan-distance
    #:do-map-neighbours
    #:read-number-list
-   #:find-pattern))
+   #:find-pattern
+   #:define-parser))
 (in-package #:aoc/utils)
 
 (defun normalize-type (type)
@@ -208,3 +209,55 @@
                    for c-2 = (elt list (+ i length))
                    always (= c-1 c-2))
           do (return-from find-pattern length)))
+
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (defun transform-state-table (definitions)
+    (loop with table = (list nil nil)
+          with callbacks = nil
+          with current = nil
+          for definition in definitions
+          do (setf current table)
+             (loop for element in definition
+                   do (etypecase element
+                        (character
+                         (setf current (or (assoc element (cddr current))
+                                           (car (setf (cdr (last current))
+                                                      (list (list element nil)))))))
+                        (list
+                         (let ((sym (GENSYM "CALLBACK")))
+                           (setf (cadr current) sym)
+                           (push (cons sym element) callbacks)))))
+          finally (return (values table
+                                  callbacks)))))
+
+(defun do-parse (stream table)
+  (loop with current = table
+        with callback = nil
+        with global = t
+        for char = (read-char stream nil)
+        until (null char)
+        do (setf current (assoc char (cddr current))
+                 callback (cadr current))
+           (if (or (null current)
+                   (and callback
+                        (null (funcall (symbol-value callback)))))
+               (progn
+                 (setf current table)
+                 (unless global
+                   (unread-char char stream))
+                 (setf global t))
+               (setf global nil))))
+
+(defmacro define-parser (name (stream) (&rest variable-bindings) &body parse-tables)
+  (multiple-value-bind (table callbacks)
+      (transform-state-table parse-tables)
+    (let ((table-var (gensym "TABLE"))
+          (callback-syms (mapcar #'car callbacks)))
+      `(defun ,name (,stream)
+         (let ((,table-var ',table)
+               ,@variable-bindings)
+           (let ,(loop for (sym . code) in callbacks
+                       collect `(,sym (lambda () ,code)))
+             (declare (special ,@callback-syms))
+             (do-parse stream ,table-var))
+           (values ,@(mapcar #'car variable-bindings)))))))
