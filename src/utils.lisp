@@ -20,6 +20,8 @@
    #:point-
    #:point-x
    #:point-y
+   #:point-in-bounds-p
+   #:*map-neighbours*
    #:point-neighbours
    #:manhattan-distance
    #:do-map-neighbours
@@ -133,6 +135,12 @@
                        (point-x point-b)))
         (the fixnum (- (point-y point-a)
                        (point-y point-b)))))
+
+(defun point-in-bounds-p (point map)
+  (and (>= (point-x point) 0)
+       (>= (point-y point) 0)
+       (< (point-x point) (input-map-width map))
+       (< (point-y point) (input-map-height map))))
 
 (declaim (inline map-cell map-integer-at (setf map-cell))
          (ftype (function (input-map cons) character) map-cell)
