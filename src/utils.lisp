@@ -21,6 +21,7 @@
    #:point-x
    #:point-y
    #:point-in-bounds-p
+   #:point-in-map-p
    #:*map-neighbours*
    #:point-neighbours
    #:manhattan-distance
@@ -136,11 +137,16 @@
         (the fixnum (- (point-y point-a)
                        (point-y point-b)))))
 
-(defun point-in-bounds-p (point map)
-  (and (>= (point-x point) 0)
-       (>= (point-y point) 0)
-       (< (point-x point) (input-map-width map))
-       (< (point-y point) (input-map-height map))))
+(declaim (inline point-in-bounds-p point-in-map-p))
+(defun point-in-bounds-p (point width height)
+  (destructuring-bind (x . y) point
+    (and (>= x 0) (>= y 0)
+         (< x width) (< y height))))
+
+(defun point-in-map-p (point map)
+  (point-in-bounds-p point
+                     (input-map-width map)
+                     (input-map-height map)))
 
 (declaim (inline map-cell map-integer-at (setf map-cell))
          (ftype (function (input-map cons) character) map-cell)

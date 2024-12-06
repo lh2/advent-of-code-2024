@@ -9,7 +9,7 @@
                   for new-point = (point+ point (cons (* nx m)
                                                       (* ny m)))
                   for cell = nil
-                  unless (point-in-bounds-p new-point map)
+                  unless (point-in-map-p new-point map)
                     do (return 0)
                   do (setf cell (map-cell map new-point))
                   unless (char= cell char)
@@ -19,7 +19,7 @@
 (defun mas-p (map point t-x)
   (let ((ps (list (point+ point (cons t-x -1))
                   (point+ point (cons (* t-x -1) 1)))))
-    (unless (every (rcurry #'point-in-bounds-p map) ps)
+    (unless (every (rcurry #'point-in-map-p map) ps)
       (return-from mas-p nil))
     (let ((cs (mapcar (curry #'map-cell map) ps)))
       (and (member #\M cs)
