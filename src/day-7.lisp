@@ -6,9 +6,14 @@
 (defparameter *operators-task-1* '(+ *))
 (defparameter *operators-task-2* '(+ * combine))
 
-(defun map-operation-combinations (function length operators)
-  (apply #'map-product function (loop for n from 1 below length
-                                      collect operators)))
+(defun map-operator-combinations (function length operators)
+  (labels ((%map (current n)
+             (if (= n length)
+                 (funcall function current)
+                 (loop with nn = (1+ n)
+                       for operator in operators
+                       do (%map (cons operator current) nn)))))
+    (%map nil 0)))
 
 (defun number-digits (number)
   (if (zerop number)
@@ -18,19 +23,21 @@
 (defun combine (num-1 num-2)
   (+ (* num-1 (expt 10 (number-digits num-2))) num-2))
 
-(defun calculate (operators numbers)
+(defun calculate (operators numbers test-value)
   (loop with current = (car numbers)
         for operator in operators
         for next in (cdr numbers)
         do (setf current (funcall operator current next))
+        when (> current test-value)
+          do (return current)
         finally (return current)))
 
 (defun test-value-valid-p (test-value numbers operators)
-  (map-operation-combinations (lambda (&rest operators)
-                                (when (= test-value (calculate operators numbers))
-                                  (return-from test-value-valid-p t)))
-                              (length numbers)
-                              operators)
+  (map-operator-combinations (lambda (operators)
+                               (when (= test-value (calculate operators numbers test-value))
+                                 (return-from test-value-valid-p t)))
+                             (1- (length numbers))
+                             operators)
   nil)
 
 (defun day-7 (input)
