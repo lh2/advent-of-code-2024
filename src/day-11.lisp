@@ -1,0 +1,42 @@
+(defpackage #:aoc/day-11
+  (:use #:cl #:aoc/utils)
+  (:export #:day-11))
+(in-package #:aoc/day-11)
+
+(declaim (inline number-of-digits)
+         (ftype (function (fixnum) fixnum) number-of-digits))
+
+(defun number-of-digits (number)
+  (floor (1+ (log number 10))))
+
+(defun blink (stones target-depth)
+  (let ((memo (make-hash-table :test #'equal)))
+    (labels ((%blink (stone depth)
+               (when (= depth target-depth)
+                 (return-from %blink 1))
+               (let ((num-digits (or (zerop stone)
+                                     (number-of-digits stone)))
+                     (new-depth (1+ depth)))
+                 (cond
+                   ((zerop stone)
+                    (%blink-memo 1 new-depth))
+                   ((evenp num-digits)
+                    (let ((divisor (expt 10 (/ num-digits 2))))
+                      (multiple-value-bind (left right)
+                          (floor stone divisor)
+                        (+ (%blink-memo left new-depth)
+                           (%blink-memo right new-depth)))))
+                   ((oddp num-digits)
+                    (%blink-memo (* stone 2024) new-depth)))))
+             (%blink-memo (stone depth)
+               (let ((key (list stone depth)))
+                 (or (gethash key memo)
+                     (setf (gethash key memo)
+                           (%blink stone depth))))))
+      (loop for stone in stones
+            sum (%blink-memo stone 0)))))
+
+(defun day-11 (input)
+  (let ((stones (read-number-list (read-line input))))
+    (values (blink stones 25)
+            (blink stones 75))))
