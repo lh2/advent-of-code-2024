@@ -30,7 +30,9 @@
    #:do-map-neighbours
    #:read-number-list
    #:find-pattern
-   #:define-parser))
+   #:define-parser
+   #:modular-inverse
+   #:crt))
 (in-package #:aoc/utils)
 
 (defun normalize-type (type)
@@ -295,3 +297,26 @@
              (declare (special ,@callback-syms))
              (do-parse stream ,table-var))
            (values ,@(mapcar #'car variable-bindings)))))))
+
+(defun gcd-extended (a b)
+  (if (zerop b)
+      (values a 1 0)
+      (multiple-value-bind (gcd x1 y1)
+          (gcd-extended b (mod a b))
+        (values gcd y1 (- x1 (* y1 (floor a b)))))))
+
+(defun modular-inverse (a m)
+  (multiple-value-bind (gcd x y)
+      (gcd-extended a m)
+    (declare (ignore y))
+    (if (/= gcd 1)
+        nil
+        (mod x m))))
+
+(defun crt (x y w h)
+  (let* ((m (lcm w h))
+         (w-inv (modular-inverse w h))
+         (h-inv (modular-inverse h w)))
+    (mod (+ (* y w w-inv)
+            (* x h h-inv))
+         m)))
