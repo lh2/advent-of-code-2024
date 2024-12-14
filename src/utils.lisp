@@ -125,6 +125,12 @@
 (defun point-y (point)
   (cdr point))
 
+(defun (setf point-x) (new-value point)
+  (setf (car point) new-value))
+
+(defun (setf point-y) (new-value point)
+  (setf (cdr point) new-value))
+
 (defun point+ (point-a point-b)
   (cons (the fixnum (+ (point-x point-a)
                        (point-x point-b)))
