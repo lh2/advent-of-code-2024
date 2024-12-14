@@ -17,4 +17,4 @@ p=9,3 v=2,3
 p=7,3 v=-1,2
 p=2,4 v=2,-3
 p=9,5 v=-3,-3")
-    (assert= 12 (aoc/day-14:run (aoc/day-14:parse-robots s) 11 7))))
+    (assert= 12 (aoc/day-14:task-1 (aoc/day-14:parse-robots s) 11 7))))

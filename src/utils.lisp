@@ -18,6 +18,8 @@
    #:map-integer-at
    #:point+
    #:point-
+   #:point*
+   #:point-mod
    #:point-x
    #:point-y
    #:point-in-bounds-p
@@ -116,7 +118,7 @@
   (loop for y from 0 below (input-map-height map)
         do (format stream "~A~%" (aref (input-map-data map) y))))
 
-(declaim (inline point+ point- point-x point-y)
+(declaim (inline point+ point- point* point-mod point-x point-y)
          (ftype (function (cons) fixnum) point-x point-y))
 
 (defun point-x (point)
@@ -142,6 +144,18 @@
                        (point-x point-b)))
         (the fixnum (- (point-y point-a)
                        (point-y point-b)))))
+
+(defun point* (point-a point-factor)
+  (cons (the fixnum (* (point-x point-a)
+                       (point-x point-factor)))
+        (the fixnum (* (point-y point-a)
+                       (point-y point-factor)))))
+
+(defun point-mod (point-a point-divisor)
+  (cons (the fixnum (mod (point-x point-a)
+                         (point-x point-divisor)))
+        (the fixnum (mod (point-y point-a)
+                         (point-y point-divisor)))))
 
 (declaim (inline point-in-bounds-p point-in-map-p))
 (defun point-in-bounds-p (point width height)
