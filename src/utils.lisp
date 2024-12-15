@@ -10,6 +10,7 @@
    #:read-input-match
    #:char-number
    #:make-map
+   #:make-empty-map
    #:print-map
    #:input-map
    #:input-map-width
@@ -116,9 +117,29 @@
                                              :width width
                                              :height height)))))
 
-(defun print-map (map &key (stream *standard-output*))
+(defun make-empty-map (width height &key (initial-element #\.))
+  (make-input-map :data (loop with array = (make-array height
+                                                       :element-type 'simple-string)
+                              for y below height
+                              do (setf (aref array y)
+                                       (make-array width
+                                                   :element-type 'character
+                                                   :initial-element initial-element))
+                              finally (return array))
+                  :width width
+                  :height height))
+
+(defun print-map (map &key (stream *standard-output*) position)
   (loop for y from 0 below (input-map-height map)
-        do (format stream "~A~%" (aref (input-map-data map) y))))
+        for line = (aref (input-map-data map) y)
+        if (and (not (null position))
+                (= (point-y position) y))
+          do (loop for c across line
+                   for x from 0
+                   do (format stream "~A" (if (equal (cons x y) position) #\@ c))
+                   finally (format stream "~%"))
+        else
+          do (format stream "~A~%" line)))
 
 (declaim (inline point+ point- point* point-mod point-x point-y)
          (ftype (function (cons) fixnum) point-x point-y))
