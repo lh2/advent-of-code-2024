@@ -3,10 +3,10 @@
   (:export #:day-16))
 (in-package #:aoc/day-16)
 
-(defparameter *directions-clockwise* '((1 . 0) (0 . 1)
-                                       (-1 . 0) (0 . -1)))
-(defparameter *directions-counterclockwise* '((1 . 0) (0 . -1)
-                                              (-1 . 0) (0 . 1)))
+(defparameter *directions-clockwise* '(#1=(1 . 0) (0 . 1)
+                                       (-1 . 0) (0 . -1) #1#))
+(defparameter *directions-counterclockwise* '(#2=(1 . 0) (0 . -1)
+                                              (-1 . 0) (0 . 1) #2#))
 
 (defstruct node
   position
@@ -61,13 +61,11 @@
         when (char/= (map-cell map next) #\#)
           do (process-next open-list closed-list next current-dir (1+ current-cost) current)
         do (process-next open-list closed-list current-pos
-                         (or (cadr (member current-dir *directions-clockwise* :test #'equal))
-                             (first *directions-clockwise*))
+                         (cadr (member current-dir *directions-clockwise* :test #'equal))
                          (+ current-cost 1000)
                          current)
            (process-next open-list closed-list current-pos
-                         (or (cadr (member current-dir *directions-counterclockwise* :test #'equal))
-                             (first *directions-counterclockwise*))
+                         (cadr (member current-dir *directions-counterclockwise* :test #'equal))
                          (+ current-cost 1000)
                          current)))
 
