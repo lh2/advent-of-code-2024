@@ -12,6 +12,7 @@
    #:make-map
    #:make-empty-map
    #:print-map
+   #:map-find
    #:input-map
    #:input-map-width
    #:input-map-height
@@ -140,6 +141,13 @@
                    finally (format stream "~%"))
         else
           do (format stream "~A~%" line)))
+
+(defun map-find (map needle)
+  (loop for y from 0 below (input-map-height map)
+        for line = (aref (input-map-data map) y)
+        for pos = (position needle line)
+        when pos
+          do (return (cons pos y))))
 
 (declaim (inline point+ point- point* point-mod point-x point-y)
          (ftype (function (cons) fixnum) point-x point-y))
