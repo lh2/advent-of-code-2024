@@ -1,10 +1,15 @@
 (defpackage #:aoc/day-17
   (:use #:cl #:aoc/utils)
   (:export
+   #:*use-compiler*
    #:make-registers
-   #:run-program
+   #:make-program
+   #:interpret
+   #:compile-program
    #:day-17))
 (in-package #:aoc/day-17)
+
+(defparameter *use-compiler* nil)
 
 (defun parse-register (line)
   (parse-integer line :start (1+ (position #\: line))))
@@ -35,11 +40,93 @@
           (aref registers (- operand 4))
           (error "Invalid operand ~A for combo operator" operand))))
 
-(defun run-program (registers program)
+(declaim (inline adv bxl bst bxc bdv cdv)
+         (ftype (function ((simple-array fixnum (3)) fixnum) null) adv bxl bst bxc bdv cdv))
+
+(defun adv (registers operand)
+  (setf (aref registers 0)
+        (floor (aref registers 0)
+               (the fixnum (expt 2 (the (integer 0 61)
+                                        (combo-operand operand registers))))))
+  nil)
+
+(defun bxl (registers operand)
+  (setf (aref registers 1)
+        (logxor (aref registers 1)
+                operand))
+  nil)
+
+(defun bst (registers operand)
+  (setf (aref registers 1)
+        (mod (combo-operand operand registers) 8))
+  nil)
+
+(defun bxc (registers operand)
+  (declare (ignore operand))
+  (setf (aref registers 1)
+        (logxor (aref registers 1)
+                (aref registers 2)))
+  nil)
+
+(defun bdv (registers operand)
+  (setf (aref registers 1)
+        (floor (aref registers 0)
+               (the fixnum (expt 2 (the (integer 0 61)
+                                        (combo-operand operand registers))))))
+  nil)
+
+(defun cdv (registers operand)
+  (setf (aref registers 2)
+        (floor (aref registers 0)
+               (the fixnum (expt 2 (the (integer 0 61)
+                                        (combo-operand operand registers))))))
+  nil)
+
+(defun make-jump (jump-tags registers op)
+  `(when (not (zerop (aref ,registers 0)))
+     (go ,(aref jump-tags op))))
+
+(defun make-output (output registers op)
+  `(push (mod (combo-operand ,op ,registers) 8) ,output))
+
+(defun compile-program (program)
+  (let* ((registers (gensym "REGISTERS"))
+         (jump-tags (coerce
+                     (loop repeat (/ (length program) 2)
+                           for i from 0
+                           collect (gensym (format nil "INST-~A" i)))
+                     'vector))
+         (output (gensym "OUTPUT"))
+         (code (loop for i from 0 below (length program) by 2
+                     for inst-id from 0
+                     for inst = (aref program i)
+                     for op = (aref program (1+ i))
+                     collect (aref jump-tags inst-id)
+                     collect (case inst
+                               (0 `(adv ,registers ,op))
+                               (1 `(bxl ,registers ,op))
+                               (2 `(bst ,registers ,op))
+                               (3 (make-jump jump-tags registers op))
+                               (4 `(bxc ,registers ,op))
+                               (5 (make-output output registers op))
+                               (6 `(bdv ,registers ,op))
+                               (7 `(cdv ,registers ,op))))))
+    (compile nil
+             `(lambda (,registers)
+                (declare (optimize speed)
+                         (type (simple-array fixnum (3)) ,registers))
+                (let ((,output nil))
+                  (tagbody
+                     ,@code)
+                  ,output)))))
+
+(declaim (ftype (function ((simple-array fixnum (3)) simple-vector) list) interpret))
+
+(defun interpret (registers code)
   (loop with output = nil
-        for ip from 0 below (length program) by 2
-        for instruction = (aref program ip)
-        for operand = (aref program (1+ ip))
+        for ip from 0 below (length code) by 2
+        for instruction = (aref code ip)
+        for operand = (aref code (1+ ip))
         do (case instruction
              (0 (setf (aref registers 0)
                       (floor (aref registers 0)
@@ -68,13 +155,13 @@
         (aref registers 1) (aref original-registers 1)
         (aref registers 2) (aref original-registers 2)))
 
-(defun task-2 (registers code)
+(defun task-2 (registers program code)
   (let ((original-registers (copy-seq registers)))
     (labels ((%solve (register-a depth)
                (loop for n from 0 below 8
                      for nra = (+ register-a n)
                      do (reset-registers registers original-registers nra)
-                        (let* ((res (run-program registers code))
+                        (let* ((res (funcall program registers))
                                (value (nth depth res)))
                           (when (= value (aref code (- (length code) 1 depth)))
                             (when (= depth (1- (length code)))
@@ -84,9 +171,16 @@
                                 (return-from %solve solved-register-a))))))))
       (%solve 1 0))))
 
+(defun make-program (code)
+  (if *use-compiler*
+      (compile-program code)
+      (lambda (registers)
+        (interpret registers code))))
+
 (defun day-17 (input)
   (multiple-value-bind (registers code)
       (parse-input input)
-    (values
-     (format nil "~{~A~^,~}" (nreverse (run-program (copy-seq registers) code)))
-     (task-2 registers code))))
+    (let ((program (make-program code)))
+      (values
+       (format nil "~{~A~^,~}" (nreverse (funcall program (copy-seq registers))))
+       (task-2 registers program code)))))
