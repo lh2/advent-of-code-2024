@@ -24,8 +24,13 @@
         until (null line)
         collect (parse-coordinate line)))
 
+(declaim (inline fall-byte unfall-byte))
+
 (defun fall-byte (map position)
   (setf (map-cell map position) #\#))
+
+(defun unfall-byte (map position)
+  (setf (map-cell map position) #\.))
 
 (defun draw-map (map visited)
   (loop for y from 0 below *height*
@@ -57,8 +62,10 @@
 
 (defun task-2 (map coordinates)
   (loop for byte in coordinates
-        do (fall-byte map byte)
-        unless (bfs map)
+        do (fall-byte map byte))
+  (loop for byte in (nreverse coordinates)
+        do (unfall-byte map byte)
+        when (bfs map)
           do (return byte)))
 
 (defun day-18 (input)
