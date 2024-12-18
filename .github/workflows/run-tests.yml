@@ -60,5 +60,6 @@ jobs:
       - name: "Test"
         run: |
           sbcl --non-interactive \
+               --eval '(format t "~A~%" most-positive-fixnum)'
                --eval '(ql:quickload (list :aoc :aoc-test))' \
                --eval '(unless (asdf:test-system :aoc) (uiop:quit 1))'
