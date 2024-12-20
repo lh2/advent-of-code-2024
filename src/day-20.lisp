@@ -19,15 +19,31 @@
                         do (setf end pos))
         finally (return (values start end))))
 
-(defun find-steps (map start end)
-  (loop with width = (input-map-width map)
+(defun day-20 (input)
+  (loop with map = (make-map input)
+        with (start end) = (multiple-value-list (find-start-end map))
+        with width = (input-map-width map)
         with height = (input-map-height map)
         with pos = start
         with last = nil
         with steps = nil
-        do (push pos steps)
+        with position-picoseconds = (make-hash-table :test #'equal)
+        with task-1 = 0
+        with task-2 = 0
+        for picoseconds from 0
+        do (setf (gethash pos position-picoseconds) picoseconds)
+           (loop for pos-2 in steps
+                 for distance = (manhattan-distance pos pos-2)
+                 for picoseconds-2 = (gethash pos-2 position-picoseconds)
+                 for saved = (- picoseconds (+ picoseconds-2 distance))
+                 do (when (>= saved 100)
+                      (when (<= distance 2)
+                        (incf task-1))
+                      (when (<= distance 20)
+                        (incf task-2))))
+           (push pos steps)
         when (equal pos end)
-          do (return (nreverse steps))
+          do (return (values task-1 task-2))
         do (psetf last pos
                   pos (loop for dir in *directions*
                             for next = (point+ pos dir)
@@ -35,30 +51,3 @@
                                       (not (equal last next))
                                       (char/= (map-cell map next) #\#))
                               do (return next)))))
-
-(defun count-cheats (steps threshold)
-  (let ((cache (make-hash-table :test #'equal)))
-    (loop for remaining-picoseconds downfrom (1- (length steps))
-          for step in steps
-          do (setf (gethash step cache) remaining-picoseconds))
-    (loop with task-1 = 0
-          with task-2 = 0
-          for node on steps
-          for step-1 = (car node)
-          for rps-1 = (gethash step-1 cache)
-          do (loop for step-2 in (cdr node)
-                   for dist = (manhattan-distance step-1 step-2)
-                   for rps-2 = (gethash step-2 cache)
-                   for saved = (- rps-1 (+ rps-2 dist))
-                   do (when (>= saved threshold)
-                        (when (<= dist 2)
-                          (incf task-1))
-                        (when (<= dist 20)
-                          (incf task-2))))
-          finally (return (values task-1 task-2)))))
-
-(defun day-20 (input)
-  (let ((map (make-map input)))
-    (multiple-value-bind (start end)
-        (find-start-end map)
-      (count-cheats (find-steps map start end) 100))))
