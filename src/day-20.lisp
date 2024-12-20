@@ -27,21 +27,18 @@
         with pos = start
         with last = nil
         with steps = nil
-        with position-picoseconds = (make-hash-table :test #'equal)
         with task-1 = 0
         with task-2 = 0
         for picoseconds from 0
-        do (setf (gethash pos position-picoseconds) picoseconds)
-           (loop for pos-2 in steps
+        do (loop for (pos-2 . picoseconds-2) in steps
                  for distance = (manhattan-distance pos pos-2)
-                 for picoseconds-2 = (gethash pos-2 position-picoseconds)
                  for saved = (- picoseconds (+ picoseconds-2 distance))
                  do (when (>= saved 100)
                       (when (<= distance 2)
                         (incf task-1))
                       (when (<= distance 20)
                         (incf task-2))))
-           (push pos steps)
+           (push (cons pos picoseconds) steps)
         when (equal pos end)
           do (return (values task-1 task-2))
         do (psetf last pos
