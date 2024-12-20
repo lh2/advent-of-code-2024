@@ -19,25 +19,22 @@
                         do (setf end pos))
         finally (return (values start end))))
 
-(defun bfs (map start end)
+(defun find-steps (map start end)
   (loop with width = (input-map-width map)
         with height = (input-map-height map)
-        with queue = (make-queue :simple-queue)
-        with visited = (make-hash-table :test #'equal)
-        initially (qpush queue (list start (list start)))
-                  (setf (gethash start visited) t)
-        for (pos steps) = (qpop queue)
-        when (null pos)
-          do (return nil)
+        with pos = start
+        with last = nil
+        with steps = nil
+        do (push pos steps)
         when (equal pos end)
           do (return (nreverse steps))
-        do (loop for dir in *directions*
-                 for next = (point+ pos dir)
-                 when (and (point-in-bounds-p next width height)
-                           (not (gethash next visited))
-                           (char/= (map-cell map next) #\#))
-                   do (qpush queue (list next (cons next steps)))
-                      (setf (gethash next visited) t))))
+        do (psetf last pos
+                  pos (loop for dir in *directions*
+                            for next = (point+ pos dir)
+                            when (and (point-in-bounds-p next width height)
+                                      (not (equal last next))
+                                      (char/= (map-cell map next) #\#))
+                              do (return next)))))
 
 (defun count-cheats (steps threshold)
   (let ((cache (make-hash-table :test #'equal)))
@@ -64,4 +61,4 @@
   (let ((map (make-map input)))
     (multiple-value-bind (start end)
         (find-start-end map)
-      (count-cheats (bfs map start end) 100))))
+      (count-cheats (find-steps map start end) 100))))
