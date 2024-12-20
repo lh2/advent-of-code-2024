@@ -188,9 +188,11 @@
         (the fixnum (mod (point-y point-a)
                          (point-y point-divisor)))))
 
-(declaim (inline point-in-bounds-p point-in-map-p))
+(declaim (ftype (function (cons fixnum fixnum) boolean) point-in-bounds-p)
+         (inline point-in-bounds-p point-in-map-p))
 (defun point-in-bounds-p (point width height)
   (destructuring-bind (x . y) point
+    (declare (type fixnum x y))
     (and (>= x 0) (>= y 0)
          (< x width) (< y height))))
 
@@ -227,6 +229,9 @@
 (defun point-neighbours (point)
   (mapcar (curry #'point+ point)
           *map-neighbours*))
+
+(declaim (ftype (function (cons cons) fixnum) manhattan-distance)
+         (inline manhattan-distance))
 
 (defun manhattan-distance (from to)
   (+ (abs (- (point-x to)

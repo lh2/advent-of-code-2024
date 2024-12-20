@@ -27,12 +27,12 @@
         with pos = start
         with last = nil
         with steps = nil
-        with task-1 = 0
-        with task-2 = 0
-        for picoseconds from 0
+        with task-1 fixnum = 0
+        with task-2 fixnum = 0
+        for picoseconds fixnum from 0
         do (loop for (pos-2 . picoseconds-2) in steps
                  for distance = (manhattan-distance pos pos-2)
-                 for saved = (- picoseconds (+ picoseconds-2 distance))
+                 for saved fixnum = (- picoseconds (+ (the fixnum picoseconds-2) distance))
                  do (when (>= saved 100)
                       (when (<= distance 2)
                         (incf task-1))
